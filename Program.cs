@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace BoxTee
 {
     internal class Program
     {
-        private static unsafe void Main()
+        private static void Main()
         {
             var a = new Foo()
             {
@@ -13,14 +14,19 @@ namespace BoxTee
                 B = 2038292938292
             };
 
-            using var boxedA = new Box<Foo>(a);
-            boxedA.Ptr->A = 333;
+            using var boxedA = (Box<Foo>) a;
+            boxedA.Ref.A = 333;
 
             Console.WriteLine($"non boxed a={a.A} b={a.B}");
-            Console.WriteLine($"boxed a={boxedA.Ptr->A} b={boxedA.Ptr->B}");
+            Console.WriteLine($"boxed a={boxedA.Ref.A} b={boxedA.Ref.B}");
 
-            using var moved = new Box<Foo>(boxedA);
-            Console.WriteLine($"moved a={moved.Ptr->A} b={moved.Ptr->B}");
+            using var moved = boxedA.Move();
+            Console.WriteLine($"moved a={moved.Ref.A} b={moved.Ref.B}");
+
+            using var rcA = (Rc<Foo>) a;
+            Console.WriteLine($"sc: {rcA.StrongCount} a={rcA.Ref.A} b={rcA.Ref.B}");
+            using var rcB = rcA.Clone();
+            Console.WriteLine($"sc: {rcB.StrongCount} a={rcB.Ref.A} b={rcB.Ref.B}");
         }
     }
 
@@ -30,30 +36,120 @@ namespace BoxTee
         public long B { get; set; }
     }
 
-    internal unsafe struct Box<T> : IDisposable
+    internal struct Box<T> : IDisposable
         where T : unmanaged
     {
-        public T* Ptr { get; private set; }
-
-        public Box(T value)
+        public ref T Ref
         {
-            var intPtr = Marshal.AllocHGlobal(sizeof(T));
-            Ptr = (T*)intPtr;
-            Marshal.StructureToPtr(value, intPtr, true);
+            get
+            {
+                unsafe { return ref Unsafe.AsRef<T>(_ptr); }
+            }
         }
 
-        public Box(Box<T> box)
+        private unsafe T* _ptr;
+
+        public Box(in T value)
         {
-            Ptr = box.Ptr;
-            box.Ptr = (T*)IntPtr.Zero;
+            unsafe
+            {
+                _ptr = (T*)Marshal.AllocHGlobal(sizeof(T));
+                *_ptr = value;
+            }
+        }
+
+        public Box<T> Move()
+        {
+            unsafe
+            {
+                var box = new Box<T> {_ptr = _ptr};
+                _ptr = (T*) IntPtr.Zero;
+                return box;
+            }
         }
 
         public void Dispose()
         {
-            if (Ptr != (T*)IntPtr.Zero)
-                Marshal.FreeHGlobal((IntPtr)Ptr);
+            unsafe
+            {
+                if (_ptr != (T*) IntPtr.Zero)
+                    Marshal.FreeHGlobal((IntPtr) _ptr);
+            }
         }
+
+        public static implicit operator Box<T>(T value) => new(value);
+        public static explicit operator T(Box<T> box) => box.Ref;
     }
 
-    internal unsafe struct Rc<T> 
+    internal readonly struct Rc<T> : IDisposable
+        where T : unmanaged
+    {
+        private struct Data<T2>
+            where T2 : unmanaged
+        {
+            public int StrongCount;
+            public int WeakCount;
+            public T2 Value;
+        }
+
+        public int StrongCount
+        {
+            get
+            {
+                unsafe { return _ptr->StrongCount; }
+            }
+        }
+
+        public int WeakCount
+        {
+            get
+            {
+                unsafe { return _ptr->WeakCount; }
+            }
+        }
+
+        public ref T Ref
+        {
+            get
+            {
+                unsafe { return ref Unsafe.AsRef<T>(&(_ptr->Value)); }
+            }
+        }
+
+        private readonly unsafe Data<T>* _ptr;
+
+        public Rc(in T value)
+        {
+            unsafe
+            {
+                var intPtr = Marshal.AllocHGlobal(sizeof(Data<T>));
+                _ptr = (Data<T>*) intPtr;
+                _ptr->StrongCount = 1;
+                _ptr->WeakCount = 0;
+                _ptr->Value = value;
+            }
+        }
+
+        public Rc<T> Clone()
+        {
+            unsafe
+            {
+                _ptr->StrongCount += 1;
+                return this;
+            }
+        }
+
+        public void Dispose()
+        {
+            unsafe
+            {
+                _ptr->StrongCount -= 1;
+                if (_ptr->StrongCount <= 0)
+                    Marshal.FreeHGlobal((IntPtr) _ptr);
+            }
+        }
+
+        public static implicit operator Rc<T>(T value) => new(value);
+        public static explicit operator T(Rc<T> box) => box.Ref;
+    }
 }
