@@ -30,9 +30,9 @@ namespace BoxTee
 
             using var weak = rcA.Downgrade();
             if (weak.TryGet(out var value))
-            {
                 Console.WriteLine(value);
-            }
+
+            using var rcUpgraded = weak.Upgrade();
         }
     }
 
