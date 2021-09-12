@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace NoName.Memory
 {
-    public struct Box<T> : IDisposable
+    public struct Box<T> : IDisposable, ICloneable<Box<T>>, IMoveable<Box<T>>
         where T : unmanaged
     {
         public ref T Ref
@@ -29,12 +29,25 @@ namespace NoName.Memory
             }
         }
 
+        public Box<T> Clone()
+        {
+            unsafe
+            {
+                var instance = new Box<T>
+                {
+                    _ptr = (T*) Marshal.AllocHGlobal(sizeof(T))
+                };
+                *(instance._ptr) = *_ptr;
+                return instance;
+            }
+        }
+
         public Box<T> Move()
         {
             unsafe
             {
-                var box = new Box<T> {_ptr = _ptr};
-                _ptr = (T*) IntPtr.Zero;
+                var box = new Box<T> { _ptr = _ptr };
+                _ptr = (T*)IntPtr.Zero;
                 return box;
             }
         }
@@ -43,8 +56,9 @@ namespace NoName.Memory
         {
             unsafe
             {
-                if (_ptr != (T*) IntPtr.Zero)
-                    Marshal.FreeHGlobal((IntPtr) _ptr);
+                if (_ptr == (T*) IntPtr.Zero) return;
+                Marshal.FreeHGlobal((IntPtr) _ptr);
+                _ptr = (T*) IntPtr.Zero;
             }
         }
 

@@ -33,6 +33,8 @@ namespace BoxTee
                 Console.WriteLine(value);
 
             using var rcUpgraded = weak.Upgrade();
+
+            using var rc = new Rc<int>(1);
         }
     }
 

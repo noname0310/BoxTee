@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace NoName.Memory
 {
-    public readonly struct Rc<T> : IDisposable
+    public readonly struct Rc<T> : IDisposable, ICloneable<Rc<T>>
         where T : unmanaged
     {
         internal unsafe RcData* Data { get; }

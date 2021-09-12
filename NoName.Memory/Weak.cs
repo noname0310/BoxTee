@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace NoName.Memory
 {
-    public readonly struct Weak<T> : IDisposable
+    public readonly struct Weak<T> : IDisposable, ICloneable<Weak<T>>
         where T : unmanaged
     {
         internal unsafe RcData* Data { get; }
@@ -38,6 +38,15 @@ namespace NoName.Memory
                 Data = rc.Data;
                 Value = rc.Value;
                 Data->WeakCount += 1;
+            }
+        }
+
+        public Weak<T> Clone()
+        {
+            unsafe
+            {
+                Data->WeakCount += 1;
+                return this;
             }
         }
 

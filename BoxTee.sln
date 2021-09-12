@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BoxTee", "BoxTee\BoxTee.csproj", "{6673F173-C35D-4C34-9E8F-59ED586CABC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoName.Memory", "NoName.Memory\NoName.Memory.csproj", "{4FA76160-7B72-4AAB-80BD-6649C60B9944}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoName.Memory", "NoName.Memory\NoName.Memory.csproj", "{4FA76160-7B72-4AAB-80BD-6649C60B9944}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArithmeticLexer", "ArithmeticLexer\ArithmeticLexer.csproj", "{F5083EBA-E1D9-4D9C-B3E1-6DDFF0A61E00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{4FA76160-7B72-4AAB-80BD-6649C60B9944}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FA76160-7B72-4AAB-80BD-6649C60B9944}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FA76160-7B72-4AAB-80BD-6649C60B9944}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5083EBA-E1D9-4D9C-B3E1-6DDFF0A61E00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5083EBA-E1D9-4D9C-B3E1-6DDFF0A61E00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5083EBA-E1D9-4D9C-B3E1-6DDFF0A61E00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5083EBA-E1D9-4D9C-B3E1-6DDFF0A61E00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
